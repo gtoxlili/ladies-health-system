@@ -5,6 +5,7 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONException;
 import cn.hutool.jwt.JWTException;
+import com.system.ladiesHealth.configuration.record.JwtRecord;
 import com.system.ladiesHealth.utils.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,22 +22,24 @@ import java.io.IOException;
 
 public class JwtAuthFilter extends BasicAuthenticationFilter {
 
-    private final JwtUtil jwtUtil;
+    private final JwtUtil util;
+    private final JwtRecord record;
 
-    public JwtAuthFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+    public JwtAuthFilter(AuthenticationManager authenticationManager, JwtUtil util, JwtRecord record) {
         super(authenticationManager);
-        this.jwtUtil = jwtUtil;
+        this.util = util;
+        this.record = record;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         // 是否是放行请求
-        String token = request.getHeader(jwtUtil.getTokenHeader());
+        String token = request.getHeader(record.tokenHeader());
         try {
-            Assert.isTrue(StrUtil.isNotBlank(token), jwtUtil.getTokenHeader() + " can not be empty");
-            jwtUtil.verifyToken(token);
-            Authentication authentication = jwtUtil.parseAuthentication(token);
+            Assert.isTrue(StrUtil.isNotBlank(token), record.tokenHeader() + " can not be empty");
+            util.verifyToken(token);
+            Authentication authentication = util.parseAuthentication(token);
             // 将认证信息存入 Spring 安全上下文中
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (IllegalArgumentException | ValidateException | JWTException | JSONException e) {

@@ -1,5 +1,6 @@
 package com.system.ladiesHealth.utils;
 
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.StrUtil;
@@ -10,51 +11,34 @@ import cn.hutool.jwt.JWTValidator;
 import cn.hutool.jwt.signers.JWTSigner;
 import cn.hutool.jwt.signers.JWTSignerUtil;
 import com.github.benmanes.caffeine.cache.Cache;
+import com.system.ladiesHealth.configuration.record.JwtRecord;
 import com.system.ladiesHealth.constants.RoleEnum;
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
 
 @Slf4j
-@Getter
-@ConfigurationProperties(prefix = "jwt")
+@Component
 public class JwtUtil {
-    private final String tokenHeader;
-    private final String tokenPrefix;
-    private final String alg;
-    private final String secret;
-    private final Integer refreshExpire;
-
-    @Getter(AccessLevel.NONE)
-    private final JWTSigner signer;
-
-    @Getter(AccessLevel.NONE)
     @Autowired
     private Cache<String, Authentication> authenticationCache;
 
-    private JwtUtil(
-            String tokenHeader,
-            String tokenPrefix,
-            String alg,
-            String secret,
-            Integer refreshExpire
-    ) {
-        this.tokenHeader = tokenHeader;
-        this.tokenPrefix = tokenPrefix;
-        this.alg = alg;
-        this.secret = secret;
-        this.refreshExpire = refreshExpire;
-        String upperAlg = alg.toUpperCase();
-        this.signer = JWTSignerUtil.createSigner(upperAlg, KeyUtil.generateKey(upperAlg, StrUtil.bytes(secret)));
+    private final JwtRecord record;
+
+    private final JWTSigner signer;
+
+    @Autowired
+    private JwtUtil(JwtRecord record) {
+        this.record = record;
+        String upperAlg = record.alg().toUpperCase();
+        this.signer = JWTSignerUtil.createSigner(upperAlg, KeyUtil.generateKey(upperAlg, StrUtil.bytes(record.secret())));
     }
 
     /**
@@ -65,12 +49,12 @@ public class JwtUtil {
      */
     public String generateToken(String sub, RoleEnum aud) {
         Date date = DateUtil.date();
-        return tokenPrefix + " " +
+        return record.tokenHeader() + " " +
                 JWT.create()
                         .setSubject(sub)
                         .setAudience(aud.name())
                         .setIssuedAt(date)
-                        .setExpiresAt(DateUtil.offsetSecond(date, refreshExpire))
+                        .setExpiresAt(DateUtil.offsetSecond(date, record.refreshExpire()))
                         .setSigner(signer)
                         .sign();
     }
@@ -85,7 +69,7 @@ public class JwtUtil {
         // 如果缓存中存在则不验证
         if (authenticationCache.getIfPresent(token) != null) return;
 
-        String tokenVal = token.substring(tokenPrefix.length() + 1);
+        String tokenVal = token.substring(record.tokenPrefix().length() + 1);
         JWTValidator validator = JWTValidator.of(tokenVal);
         validator.validateAlgorithm(signer);
         try {
@@ -106,9 +90,9 @@ public class JwtUtil {
         Authentication authentication = authenticationCache.getIfPresent(token);
         if (authentication != null) return authentication;
 
-        JWT jwt = JWTUtil.parseToken(token.substring(tokenPrefix.length() + 1));
+        JWT jwt = JWTUtil.parseToken(token.substring(record.tokenPrefix().length() + 1));
         String sub = (String) jwt.getPayload(JWT.SUBJECT);
-        List<String> aud = (List<String>) jwt.getPayload(JWT.AUDIENCE);
+        List<String> aud = Convert.toList(String.class, jwt.getPayload(JWT.AUDIENCE));
         List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(aud.get(0)));
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(sub, token, authorities);
 

@@ -1,6 +1,7 @@
 package com.system.ladiesHealth.configuration;
 
 
+import com.system.ladiesHealth.configuration.record.JwtRecord;
 import com.system.ladiesHealth.exception.AuthorizedFailSupport;
 import com.system.ladiesHealth.utils.JwtUtil;
 import com.system.ladiesHealth.utils.filter.CorsAuthFilter;
@@ -27,7 +28,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class SecurityConfig {
 
-
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
@@ -40,7 +40,6 @@ public class SecurityConfig {
 
     @Autowired
     private AuthorizedFailSupport authorizedFailSupport;
-
 
     @Value("${front.domain}")
     private String frontDomain;
@@ -62,6 +61,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JwtUtil jwtUtil,
+                                                   JwtRecord jwtRecord,
                                                    @Lazy AuthenticationManager authenticationManager
     ) throws Exception {
         return http
@@ -85,7 +85,7 @@ public class SecurityConfig {
                 .and()
                 // 添加过滤器
                 .authenticationManager(authenticationManager)
-                .addFilterBefore(new JwtAuthFilter(authenticationManager, jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtAuthFilter(authenticationManager, jwtUtil, jwtRecord), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(CorsAuthFilter.create(frontDomain, tokenHeader)
                         , JwtAuthFilter.class)
                 .build();

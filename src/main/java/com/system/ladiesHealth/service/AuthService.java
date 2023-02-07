@@ -5,6 +5,7 @@ import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.github.benmanes.caffeine.cache.Cache;
+import com.system.ladiesHealth.configuration.record.JwtRecord;
 import com.system.ladiesHealth.constants.LoginTypeEnum;
 import com.system.ladiesHealth.constants.RoleEnum;
 import com.system.ladiesHealth.dao.UserRepository;
@@ -43,6 +44,9 @@ public class AuthService {
     private JwtUtil jwtUtil;
 
     @Autowired
+    private JwtRecord jwtRecord;
+
+    @Autowired
     private AuthConvert authConvert;
 
     @Autowired
@@ -76,7 +80,7 @@ public class AuthService {
 
         // 将 Token 放入 Header 中
         HttpHeaders headers = new HttpHeaders();
-        headers.add(jwtUtil.getTokenHeader(), token);
+        headers.add(jwtRecord.tokenHeader(), token);
 
         return ResponseEntity.ok()
                 .headers(headers)
@@ -108,7 +112,7 @@ public class AuthService {
 
         // 将 Token 放入 Header 中
         HttpHeaders headers = new HttpHeaders();
-        headers.add(jwtUtil.getTokenHeader(), token);
+        headers.add(jwtRecord.tokenHeader(), token);
 
         return ResponseEntity.ok()
                 .headers(headers)

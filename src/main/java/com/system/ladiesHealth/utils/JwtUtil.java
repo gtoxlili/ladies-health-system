@@ -10,18 +10,17 @@ import cn.hutool.jwt.JWTValidator;
 import cn.hutool.jwt.signers.JWTSigner;
 import cn.hutool.jwt.signers.JWTSignerUtil;
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.system.ladiesHealth.constants.RoleEnum;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 
@@ -39,7 +38,8 @@ public class JwtUtil {
     private final JWTSigner signer;
 
     @Getter(AccessLevel.NONE)
-    private final Cache<String, Authentication> caffeine;
+    @Autowired
+    private Cache<String, Authentication> authenticationCache;
 
     private JwtUtil(
             String tokenHeader,
@@ -54,13 +54,7 @@ public class JwtUtil {
         this.secret = secret;
         this.refreshExpire = refreshExpire;
         String upperAlg = alg.toUpperCase();
-        signer = JWTSignerUtil.createSigner(upperAlg, KeyUtil.generateKey(upperAlg, StrUtil.bytes(secret)));
-        caffeine = Caffeine.newBuilder()
-                .initialCapacity(16)
-                .maximumSize(128)
-                .expireAfterWrite(Duration.ofDays(1))
-                .build();
-
+        this.signer = JWTSignerUtil.createSigner(upperAlg, KeyUtil.generateKey(upperAlg, StrUtil.bytes(secret)));
     }
 
     /**
@@ -89,7 +83,7 @@ public class JwtUtil {
      */
     public void verifyToken(String token) throws ValidateException {
         // 如果缓存中存在则不验证
-        if (caffeine.getIfPresent(token) != null) return;
+        if (authenticationCache.getIfPresent(token) != null) return;
 
         String tokenVal = token.substring(tokenPrefix.length() + 1);
         JWTValidator validator = JWTValidator.of(tokenVal);
@@ -109,7 +103,7 @@ public class JwtUtil {
      */
     public Authentication parseAuthentication(String token) {
         // 如果缓存中存在则直接返回
-        Authentication authentication = caffeine.getIfPresent(token);
+        Authentication authentication = authenticationCache.getIfPresent(token);
         if (authentication != null) return authentication;
 
         JWT jwt = JWTUtil.parseToken(token.substring(tokenPrefix.length() + 1));
@@ -118,7 +112,7 @@ public class JwtUtil {
         List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(aud.get(0)));
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(sub, token, authorities);
 
-        caffeine.put(token, authenticationToken);
+        authenticationCache.put(token, authenticationToken);
 
         return authenticationToken;
     }

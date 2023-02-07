@@ -1,0 +1,15 @@
+front:
+  domain: https://*.gtio.work:[*]
+
+spring:
+  datasource:
+    url: jdbc:mysql://175.178.43.44:3306/ladies_health
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

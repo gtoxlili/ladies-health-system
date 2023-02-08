@@ -4,6 +4,8 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.system.ladiesHealth.domain.pojo.RollbackPOJO;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.Authentication;
@@ -33,13 +35,13 @@ public class CacheConfig {
                 .build();
     }
 
-    // username -> userID
     @Bean
-    public Cache<String, String> userCache() {
-        return Caffeine.newBuilder()
-                .initialCapacity(16)
-                .maximumSize(128)
-                .expireAfterWrite(Duration.ofDays(1))
-                .build();
+    public CacheManager cacheManager() {
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+        cacheManager.setCaffeine(Caffeine.newBuilder()
+                .initialCapacity(128)
+                .maximumSize(2048)
+                .expireAfterAccess(Duration.ofMinutes(30)));
+        return cacheManager;
     }
 }

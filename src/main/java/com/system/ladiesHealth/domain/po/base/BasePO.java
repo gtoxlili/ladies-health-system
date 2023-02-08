@@ -50,8 +50,9 @@ public class BasePO implements Serializable {
     private Date updateDate;
 
     @Setter
-    @Column(name = "FDEL_FLAG", columnDefinition = "INTEGER default 0", insertable = false, nullable = false)
-    private Long delFlag;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "FDEL_TIME", insertable = false)
+    private Date delTime;
 }
 
 

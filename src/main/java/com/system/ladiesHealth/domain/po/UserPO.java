@@ -10,9 +10,9 @@ import lombok.EqualsAndHashCode;
 @Data
 @Table(name = "T_USER",
         uniqueConstraints = {
-                @UniqueConstraint(name = "username", columnNames = {"FUSERNAME", "FDEL_FLAG"}),
-                @UniqueConstraint(name = "email", columnNames = {"FEMAIL", "FDEL_FLAG"}),
-                @UniqueConstraint(name = "phone", columnNames = {"FPHONE", "FDEL_FLAG"})
+                @UniqueConstraint(name = "username", columnNames = {"FUSERNAME", "FDEL_TIME"}),
+                @UniqueConstraint(name = "email", columnNames = {"FEMAIL", "FDEL_TIME"}),
+                @UniqueConstraint(name = "phone", columnNames = {"FPHONE", "FDEL_TIME"})
         }
 )
 @EqualsAndHashCode(callSuper = true)

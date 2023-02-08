@@ -12,13 +12,13 @@ import java.util.function.Function;
 public enum LoginTypeEnum {
 
     @JsonProperty("username")
-    USERNAME(UserSubmitDTO::getUsername, userRepository -> userRepository::findByUsername),
+    USERNAME(UserSubmitDTO::getUsername, userRepository -> userRepository::findByUsernameAndDelTimeIsNull),
 
     @JsonProperty("email")
-    EMAIL(UserSubmitDTO::getEmail, userRepository -> userRepository::findByEmail),
+    EMAIL(UserSubmitDTO::getEmail, userRepository -> userRepository::findByEmailAndDelTimeIsNull),
 
     @JsonProperty("phone")
-    PHONE(UserSubmitDTO::getPhone, userRepository -> userRepository::findByPhone),
+    PHONE(UserSubmitDTO::getPhone, userRepository -> userRepository::findByPhoneAndDelTimeIsNull),
 
     @JsonProperty("illegal")
     ILLEGAL(null, null);

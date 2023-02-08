@@ -12,27 +12,12 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<UserPO, String>, JpaSpecificationExecutor<UserPO> {
 
-    Optional<UserPO> findByUsernameAndDelFlag(String username, Long delFlag);
+    Optional<UserPO> findByUsernameAndDelTimeIsNull(String username);
 
-    default Optional<UserPO> findByUsername(String username) {
-        return findByUsernameAndDelFlag(username, 0L);
-    }
+    Optional<UserPO> findByEmailAndDelTimeIsNull(String email);
 
-    Optional<UserPO> findByEmailAndDelFlag(String email, Long delFlag);
+    Optional<UserPO> findByPhoneAndDelTimeIsNull(String phone);
 
-    default Optional<UserPO> findByEmail(String email) {
-        return findByEmailAndDelFlag(email, 0L);
-    }
+    List<UserPO> findAllByUsernameInAndDelTimeIsNull(List<String> usernames);
 
-    Optional<UserPO> findByPhoneAndDelFlag(String phone, Long delFlag);
-
-    default Optional<UserPO> findByPhone(String phone) {
-        return findByPhoneAndDelFlag(phone, 0L);
-    }
-
-    List<UserPO> findAllByUsernameInAndDelFlag(List<String> usernames, Long delFlag);
-
-    default List<UserPO> findAllByUsernameIn(List<String> usernames) {
-        return findAllByUsernameInAndDelFlag(usernames, 0L);
-    }
 }

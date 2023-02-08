@@ -1,5 +1,6 @@
 package com.system.ladiesHealth.service;
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
@@ -122,7 +123,7 @@ public class AuthService {
         if (userDTO.getPassword() != null) {
             userDTO.setPassword(bCryptPasswordEncoder.encode(userDTO.getPassword()));
         }
-        UserPO userPO = userRepository.findByUsername(userDTO.getUsername()).orElseThrow(
+        UserPO userPO = userRepository.findByUsernameAndDelTimeIsNull(userDTO.getUsername()).orElseThrow(
                 () -> new UsernameNotFoundException("User not found with userName: " + userDTO.getUsername())
         );
         // 保存旧数据
@@ -152,11 +153,11 @@ public class AuthService {
      * 注销用户逻辑
      */
     public Res<OperateVO> delete(String username) {
-        UserPO userPO = userRepository.findByUsername(username).orElseThrow(
+        UserPO userPO = userRepository.findByUsernameAndDelTimeIsNull(username).orElseThrow(
                 () -> new UsernameNotFoundException("User not found with userName: " + username)
         );
         // 设置为当前时间戳
-        userPO.setDelFlag(DateUtil.currentSeconds());
+        userPO.setDelTime(DateUtil.date());
         userRepository.save(userPO);
         this.logout();
 
@@ -167,7 +168,7 @@ public class AuthService {
                         .builder()
                         .action(actionName)
                         .rollback(() -> {
-                            userPO.setDelFlag(0L);
+                            userPO.setDelTime(null);
                             userRepository.save(userPO);
                         })
                         .build()
@@ -187,9 +188,9 @@ public class AuthService {
     @Transactional(rollbackFor = Exception.class)
     @PreAuthorize("hasRole('ADMIN')")
     public Res<OperateVO> delete(List<String> usernames) {
-        List<UserPO> userPOs = userRepository.findAllByUsernameIn(usernames);
-        Long currentSeconds = DateUtil.currentSeconds();
-        userPOs.forEach(userPO -> userPO.setDelFlag(currentSeconds));
+        List<UserPO> userPOs = userRepository.findAllByUsernameInAndDelTimeIsNull(usernames);
+        DateTime now = DateUtil.date();
+        userPOs.forEach(userPO -> userPO.setDelTime(now));
         userRepository.saveAll(userPOs);
 
         String nanoid = NanoIdUtils.randomNanoId();
@@ -199,7 +200,7 @@ public class AuthService {
                         .builder()
                         .action(actionName)
                         .rollback(() -> {
-                            userPOs.forEach(userPO -> userPO.setDelFlag(0L));
+                            userPOs.forEach(userPO -> userPO.setDelTime(null));
                             userRepository.saveAll(userPOs);
                         })
                         .build()

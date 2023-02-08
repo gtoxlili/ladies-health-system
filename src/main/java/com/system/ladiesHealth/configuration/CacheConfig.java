@@ -32,4 +32,14 @@ public class CacheConfig {
                 .expireAfterWrite(Duration.ofDays(1))
                 .build();
     }
+
+    // username -> userID
+    @Bean
+    public Cache<String, String> userCache() {
+        return Caffeine.newBuilder()
+                .initialCapacity(16)
+                .maximumSize(128)
+                .expireAfterWrite(Duration.ofDays(1))
+                .build();
+    }
 }

@@ -61,7 +61,7 @@ public class JwtUtil {
     /**
      * 生成token
      *
-     * @param aud 身份, sub 用户名
+     * @param aud 身份, sub 用户ID
      * @return token
      */
     public String generateToken(String sub, RoleEnum aud) {

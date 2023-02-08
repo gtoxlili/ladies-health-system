@@ -15,6 +15,7 @@ import com.system.ladiesHealth.domain.pojo.RollbackPOJO;
 import com.system.ladiesHealth.domain.vo.OperateVO;
 import com.system.ladiesHealth.domain.vo.UserDetailVO;
 import com.system.ladiesHealth.domain.vo.base.Res;
+import com.system.ladiesHealth.exception.BusinessException;
 import com.system.ladiesHealth.utils.JwtUtil;
 import com.system.ladiesHealth.utils.convert.AuthConvert;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +70,7 @@ public class AuthService {
             throw new BadCredentialsException("Password is not correct with " + loginType.name().toLowerCase() + ": " + tag);
         }
         // 生成 token
-        String token = jwtUtil.generateToken(userPO.getUsername(), userPO.getRole());
+        String token = jwtUtil.generateToken(userPO.getId(), userPO.getRole());
 
         // 认证成功后，将认证信息放入 Spring Security 上下文
         Authentication authentication = jwtUtil.parseAuthentication(token);
@@ -97,11 +98,11 @@ public class AuthService {
      */
     public ResponseEntity<Res<UserDetailVO>> register(UserSubmitDTO userDTO, RoleEnum role) {
         userDTO.setPassword(bCryptPasswordEncoder.encode(userDTO.getPassword()));
-        userRepository.save(authConvert.generateUserPOByUserSubmitDTO(userDTO, role));
+        UserPO userPO = userRepository.save(authConvert.generateUserPOByUserSubmitDTO(userDTO, role));
 
         // 注册成功后，直接登录
         // 生成 token
-        String token = jwtUtil.generateToken(userDTO.getUsername(), role);
+        String token = jwtUtil.generateToken(userPO.getId(), role);
 
         // 认证成功后，将认证信息放入 Spring Security 上下文
         Authentication authentication = jwtUtil.parseAuthentication(token);
@@ -113,22 +114,23 @@ public class AuthService {
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .body(Res.ok(authConvert.generateUserDetailVOByUserSubmitDTO(userDTO, role)));
+                .body(Res.ok(authConvert.generateUserDetailVOByUserPO(userPO)));
     }
 
     /**
      * 更新用户信息逻辑
      */
-    public Res<OperateVO> updateInfo(UserSubmitDTO userDTO) {
-        if (userDTO.getPassword() != null) {
-            userDTO.setPassword(bCryptPasswordEncoder.encode(userDTO.getPassword()));
-        }
-        UserPO userPO = userRepository.findByUsernameAndDelTimeIsNull(userDTO.getUsername()).orElseThrow(
-                () -> new UsernameNotFoundException("User not found with userName: " + userDTO.getUsername())
+    public Res<OperateVO> updateInfo(String userID, UserSubmitDTO userDTO) {
+        UserPO userPO = userRepository.findById(userID).orElseThrow(
+                () -> new UsernameNotFoundException("User not found with userID: " + userID)
         );
+
         // 保存旧数据
         UserPO oldUserPO = ObjUtil.clone(userPO);
 
+        if (userDTO.getPassword() != null) {
+            userDTO.setPassword(bCryptPasswordEncoder.encode(userDTO.getPassword()));
+        }
         authConvert.updateUserPOByUserSubmitDTO(userDTO, userPO);
         userRepository.save(userPO);
 
@@ -150,11 +152,27 @@ public class AuthService {
     }
 
     /**
+     * Admin 更新用户信息逻辑
+     */
+    public Res<OperateVO> updateInfo(UserSubmitDTO userDTO) {
+        UserPO userPO = userRepository.findByUsernameAndDelTimeIsNull(userDTO.getUsername()).orElseThrow(
+                () -> new UsernameNotFoundException("User not found with userName: " + userDTO.getUsername())
+        );
+        if (userPO.getRole() == RoleEnum.ROLE_ADMIN) {
+            String id = SecurityContextHolder.getContext().getAuthentication().getName();
+            if (!id.equals(userPO.getId())) {
+                throw new BusinessException("Can not modify other admins information");
+            }
+        }
+        return this.updateInfo(userPO.getId(), userDTO);
+    }
+
+    /**
      * 注销用户逻辑
      */
-    public Res<OperateVO> delete(String username) {
-        UserPO userPO = userRepository.findByUsernameAndDelTimeIsNull(username).orElseThrow(
-                () -> new UsernameNotFoundException("User not found with userName: " + username)
+    public Res<OperateVO> delete(String id) {
+        UserPO userPO = userRepository.findById(id).orElseThrow(
+                () -> new UsernameNotFoundException("User not found with userID: " + id)
         );
         // 设置为当前时间戳
         userPO.setDelTime(DateUtil.date());

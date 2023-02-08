@@ -1,6 +1,5 @@
 package com.system.ladiesHealth.controller;
 
-import cn.hutool.core.util.StrUtil;
 import com.system.ladiesHealth.constants.LoginTypeEnum;
 import com.system.ladiesHealth.constants.RoleEnum;
 import com.system.ladiesHealth.domain.dto.UserSubmitDTO;
@@ -65,20 +64,10 @@ public class AuthController {
     public Res<OperateVO> update(
             @Validated(UserSubmitDTO.Norm.class) @RequestBody UserSubmitDTO userDTO,
             Authentication authentication) {
-        // admin 可以修改任何用户信息
-        // 其实存在一个问题，admin 可以修改其他 admin 的信息
         if (authentication.getAuthorities().stream().anyMatch(authority -> RoleEnum.valueOf(authority.getAuthority()).equals(RoleEnum.ROLE_ADMIN))) {
-            if (StrUtil.isBlank(userDTO.getUsername())) {
-                userDTO.setUsername(authentication.getName());
-            }
             return authService.updateInfo(userDTO);
         }
-        if (StrUtil.isNotBlank(userDTO.getUsername()) && !authentication.getName().equals(userDTO.getUsername())) {
-            log.warn("用户 {} 在尝试修改用户 {} 的信息", authentication.getName(), userDTO.getUsername());
-            throw new BusinessException("Unauthorized to modify other user information");
-        }
-        userDTO.setUsername(authentication.getName());
-        return authService.updateInfo(userDTO);
+        return authService.updateInfo(authentication.getName(), userDTO);
     }
 
     @DeleteMapping("/register")

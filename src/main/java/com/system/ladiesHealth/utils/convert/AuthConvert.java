@@ -14,8 +14,6 @@ public interface AuthConvert {
 
     UserDetailVO generateUserDetailVOByUserPO(UserPO userPO);
 
-    UserDetailVO generateUserDetailVOByUserSubmitDTO(UserSubmitDTO userSubmitDTO, RoleEnum role);
-
     UserPO generateUserPOByUserSubmitDTO(UserSubmitDTO userSubmitDTO, RoleEnum role);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

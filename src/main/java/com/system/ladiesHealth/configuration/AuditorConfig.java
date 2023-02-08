@@ -18,7 +18,7 @@ public class AuditorConfig {
         return () -> {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             return Objects.isNull(authentication) || authentication.getPrincipal().equals("anonymousUser")
-                    ? Optional.of("Unknown") :
+                    ? Optional.empty() :
                     Optional.of(authentication.getName());
         };
     }

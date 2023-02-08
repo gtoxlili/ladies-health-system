@@ -1,5 +1,6 @@
 package com.system.ladiesHealth.utils;
 
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.StrUtil;
@@ -108,7 +109,7 @@ public class JwtUtil {
 
         JWT jwt = JWTUtil.parseToken(token.substring(tokenPrefix.length() + 1));
         String sub = (String) jwt.getPayload(JWT.SUBJECT);
-        List<String> aud = (List<String>) jwt.getPayload(JWT.AUDIENCE);
+        List<String> aud = Convert.toList(String.class, jwt.getPayload(JWT.AUDIENCE));
         List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(aud.get(0)));
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(sub, token, authorities);
 

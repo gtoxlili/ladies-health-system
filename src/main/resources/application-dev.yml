@@ -3,7 +3,8 @@ front:
 
 spring:
   datasource:
-    url: jdbc:mysql://175.178.43.44:3306/ladies_health_dev
+    hikari:
+      catalog: ladies_health_dev
   jpa:
     hibernate:
       ddl-auto: update

@@ -16,44 +16,48 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
 
 @Slf4j
 @Getter
-@ConfigurationProperties(prefix = "jwt")
+@Component
 public class JwtUtil {
-    private final String tokenHeader;
-    private final String tokenPrefix;
+
+    @Value("${jwt.token-header}")
+    private String tokenHeader;
+
+    @Value("${jwt.token-prefix}")
+    private String tokenPrefix;
+
     private final String alg;
+
     private final String secret;
-    private final Integer refreshExpire;
+
+    @Value("${jwt.refresh-expire}")
+    private Integer refreshExpire;
 
     @Getter(AccessLevel.NONE)
     private final JWTSigner signer;
+
 
     @Getter(AccessLevel.NONE)
     @Autowired
     private Cache<String, Authentication> authenticationCache;
 
     private JwtUtil(
-            String tokenHeader,
-            String tokenPrefix,
-            String alg,
-            String secret,
-            Integer refreshExpire
+            @Value("${jwt.alg}") String alg,
+            @Value("${jwt.secret}") String secret
     ) {
-        this.tokenHeader = tokenHeader;
-        this.tokenPrefix = tokenPrefix;
         this.alg = alg;
         this.secret = secret;
-        this.refreshExpire = refreshExpire;
         String upperAlg = alg.toUpperCase();
         this.signer = JWTSignerUtil.createSigner(upperAlg, KeyUtil.generateKey(upperAlg, StrUtil.bytes(secret)));
     }

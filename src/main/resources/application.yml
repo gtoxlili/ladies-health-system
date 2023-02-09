@@ -63,4 +63,13 @@ logging:
               BasicBinder: trace
               BasicExtractor: trace
 
+async:
+  thread:
+    core_pool_size: 4
+    max_pool_size: 16
+    queue_capacity: 2048
+    name:
+      prefix: LadiesHealth-
+    keep_alive_seconds: 120
+    rejection-policy: java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy
 

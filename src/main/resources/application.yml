@@ -46,6 +46,16 @@ spring:
   web:
     resources:
       add-mappings: false
+  cloud:
+    openfeign:
+      compression:
+        request:
+          enabled: true
+          mime-types: application/json,application/xml,text/xml
+          min-request-size: 2048
+        response:
+          enabled: true
+
 
 jwt:
   token-header: Authorization
@@ -72,4 +82,5 @@ async:
       prefix: LadiesHealth-
     keep_alive_seconds: 120
     rejection-policy: java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy
+
 

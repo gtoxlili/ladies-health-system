@@ -6,6 +6,10 @@
 
 1. 基于 `ROLE` 的接口权限控制
 2. 基于 JWT 的鉴权机制 (利好分布式)
+3. 灵活配置 CORS 白名单 (以备前后端分离)
+4. 基于 BCryptPasswordEncoder 的密码加密机制
+
+> 这个算法很特别，每次Hash出来都是不一样的结果，但是 matches 却可以成功，可以深入了解下原理
 
 ##### [基于贫血模型的MVC框架](https://zh.wikipedia.org/zh-cn/MVC)
 

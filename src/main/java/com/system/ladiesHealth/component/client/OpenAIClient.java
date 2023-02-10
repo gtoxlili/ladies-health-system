@@ -4,7 +4,6 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(name = "OpenAI", url = "https://api.openai.com/v1")
 public interface OpenAIClient {
@@ -17,7 +16,11 @@ public interface OpenAIClient {
       -d '{"input": "Sample text goes here"}'
     }'
      */
-    @PostMapping(value = "/moderations", consumes = MediaType.APPLICATION_JSON_VALUE)
-    String moderation(@RequestHeader("Authorization") String authorization, @RequestBody String body);
+    @PostMapping(
+            value = "/moderations",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            headers = "Authorization=Bearer ${openai.api-key}"
+    )
+    String moderation(@RequestBody String body);
 
 }

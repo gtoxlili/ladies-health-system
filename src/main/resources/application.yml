@@ -55,7 +55,10 @@ spring:
           min-request-size: 2048
         response:
           enabled: true
-
+      client:
+        config:
+          default:
+            loggerLevel: basic
 
 jwt:
   token-header: Authorization
@@ -72,6 +75,12 @@ logging:
             sql:
               BasicBinder: trace
               BasicExtractor: trace
+    com:
+      system:
+        ladiesHealth:
+          component:
+            client: debug
+
 
 async:
   thread:

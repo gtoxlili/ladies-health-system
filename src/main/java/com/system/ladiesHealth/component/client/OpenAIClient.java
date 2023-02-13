@@ -1,5 +1,9 @@
 package com.system.ladiesHealth.component.client;
 
+import com.system.ladiesHealth.domain.pojo.openAI.CompletionsReq;
+import com.system.ladiesHealth.domain.pojo.openAI.CompletionsRes;
+import com.system.ladiesHealth.domain.pojo.openAI.ModerationsReq;
+import com.system.ladiesHealth.domain.pojo.openAI.ModerationsRes;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +25,26 @@ public interface OpenAIClient {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             headers = "Authorization=Bearer ${openai.api-key}"
     )
-    String moderation(@RequestBody String body);
+    ModerationsRes moderation(@RequestBody ModerationsReq body);
+
+    /*
+    curl https://api.openai.com/v1/completions \
+      -H 'Content-Type: application/json' \
+      -H 'Authorization: Bearer YOUR_API_KEY' \
+      -d '{
+      "model": "text-davinci-003",
+      "prompt": "Say this is a test",
+      "max_tokens": 7,
+      "temperature": 0
+    }'
+     */
+
+    @PostMapping(
+            value = "/completions",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.TEXT_EVENT_STREAM_VALUE,
+            headers = "Authorization=Bearer ${openai.api-key}"
+    )
+    CompletionsRes completion(@RequestBody CompletionsReq body);
 
 }

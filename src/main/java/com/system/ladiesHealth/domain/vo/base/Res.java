@@ -35,7 +35,7 @@ public class Res<T> {
     }
 
     static public <T> Res<T> fail(ErrorStatus status, String message) {
-        return new Res<>(status.getStatusCode(), message, null);
+        return new Res<>(status.getStatusCode(), status.getDefaultMessage() + ":" + message, null);
     }
 
     static public Res<String> fail(ErrorStatus status) {
@@ -46,6 +46,6 @@ public class Res<T> {
         if (StrUtil.isBlank(e.getMessage())) {
             return new Res<>(status.getStatusCode(), status.getDefaultMessage(), null);
         }
-        return new Res<>(status.getStatusCode(), e.getMessage(), null);
+        return new Res<>(status.getStatusCode(), status.getDefaultMessage() + ":" + e.getMessage(), null);
     }
 }

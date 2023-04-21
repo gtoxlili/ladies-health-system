@@ -41,6 +41,10 @@ public class UserSubmitDTO {
     @JsonDeserialize(using = EmptyToNull.class)
     private String phone;
 
+    // 七天内免登录
+    @Schema(description = "是否记住我")
+    private Boolean rememberMe;
+
     public interface Register {
     }
 

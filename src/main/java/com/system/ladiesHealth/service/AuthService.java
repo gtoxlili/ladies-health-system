@@ -4,19 +4,18 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
-import com.github.benmanes.caffeine.cache.Cache;
 import com.system.ladiesHealth.constants.LoginTypeEnum;
 import com.system.ladiesHealth.constants.RoleEnum;
 import com.system.ladiesHealth.dao.UserRepository;
+import com.system.ladiesHealth.dao.specification.UserSpecification;
 import com.system.ladiesHealth.domain.dto.UserSubmitDTO;
 import com.system.ladiesHealth.domain.po.UserPO;
-import com.system.ladiesHealth.domain.pojo.RollbackPOJO;
 import com.system.ladiesHealth.domain.vo.OperateVO;
 import com.system.ladiesHealth.domain.vo.UserDetailVO;
 import com.system.ladiesHealth.domain.vo.base.Res;
 import com.system.ladiesHealth.exception.BusinessException;
 import com.system.ladiesHealth.utils.JwtUtil;
+import com.system.ladiesHealth.utils.RollbackUtil;
 import com.system.ladiesHealth.utils.convert.AuthConvert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -48,7 +47,7 @@ public class AuthService {
     private AuthConvert authConvert;
 
     @Autowired
-    private Cache<String, RollbackPOJO> rollbackCache;
+    private RollbackUtil rollbackUtil;
 
     /**
      * 处理登录逻辑
@@ -70,7 +69,12 @@ public class AuthService {
             throw new BadCredentialsException("Password is not correct with " + loginType.name().toLowerCase() + ": " + tag);
         }
         // 生成 token
-        String token = jwtUtil.generateToken(userPO.getId(), userPO.getRole());
+        String token;
+        if (userDTO.getRememberMe()) {
+            token = jwtUtil.generateToken(userPO.getId(), userPO.getRole(), 7 * 24 * 60 * 60);
+        } else {
+            token = jwtUtil.generateToken(userPO.getId(), userPO.getRole());
+        }
 
         // 认证成功后，将认证信息放入 Spring Security 上下文
         Authentication authentication = jwtUtil.parseAuthentication(token);
@@ -97,6 +101,13 @@ public class AuthService {
      * 处理注册逻辑
      */
     public ResponseEntity<Res<UserDetailVO>> register(UserSubmitDTO userDTO, RoleEnum role) {
+
+        // 检测数据库是否已经存在
+        UserSpecification specification = new UserSpecification(userDTO.getUsername(), userDTO.getEmail(), userDTO.getPhone());
+        if (userRepository.exists(specification)) {
+            throw new BusinessException("User already exists");
+        }
+
         userDTO.setPassword(bCryptPasswordEncoder.encode(userDTO.getPassword()));
         UserPO userPO = userRepository.save(authConvert.generateUserPOByUserSubmitDTO(userDTO, role));
 
@@ -134,20 +145,8 @@ public class AuthService {
         authConvert.updateUserPOByUserSubmitDTO(userDTO, userPO);
         userRepository.save(userPO);
 
-        String nanoid = NanoIdUtils.randomNanoId();
-        String actionName = "更新用户信息";
-        rollbackCache.put(nanoid,
-                RollbackPOJO
-                        .builder()
-                        .action(actionName)
-                        .rollback(() -> userRepository.save(oldUserPO))
-                        .build()
-        );
         return Res.ok(
-                OperateVO.builder()
-                        .action(actionName)
-                        .rollbackUrl("/rollback/" + nanoid)
-                        .build()
+                rollbackUtil.builder("更新用户信息", () -> userRepository.save(oldUserPO))
         );
     }
 
@@ -179,24 +178,11 @@ public class AuthService {
         userRepository.save(userPO);
         this.logout();
 
-        String nanoid = NanoIdUtils.randomNanoId();
-        String actionName = "注销用户";
-        rollbackCache.put(nanoid,
-                RollbackPOJO
-                        .builder()
-                        .action(actionName)
-                        .rollback(() -> {
-                            userPO.setDelTime(null);
-                            userRepository.save(userPO);
-                        })
-                        .build()
-        );
-
         return Res.ok(
-                OperateVO.builder()
-                        .action("注销用户")
-                        .rollbackUrl("/rollback/" + nanoid)
-                        .build()
+                rollbackUtil.builder("注销用户", () -> {
+                    userPO.setDelTime(null);
+                    userRepository.save(userPO);
+                })
         );
     }
 
@@ -211,24 +197,11 @@ public class AuthService {
         userPOs.forEach(userPO -> userPO.setDelTime(now));
         userRepository.saveAll(userPOs);
 
-        String nanoid = NanoIdUtils.randomNanoId();
-        String actionName = "批量注销用户";
-        rollbackCache.put(nanoid,
-                RollbackPOJO
-                        .builder()
-                        .action(actionName)
-                        .rollback(() -> {
-                            userPOs.forEach(userPO -> userPO.setDelTime(null));
-                            userRepository.saveAll(userPOs);
-                        })
-                        .build()
-        );
-
         return Res.ok(
-                OperateVO.builder()
-                        .action("批量注销用户")
-                        .rollbackUrl("/rollback/" + nanoid)
-                        .build()
+                rollbackUtil.builder("批量注销用户", () -> {
+                    userPOs.forEach(userPO -> userPO.setDelTime(null));
+                    userRepository.saveAll(userPOs);
+                })
         );
     }
 

@@ -27,4 +27,13 @@ public class GlobalController {
     ) {
         return globalService.rollback(id);
     }
+
+    /*
+    心跳接口
+     */
+    @GetMapping("/checkAuth")
+    @Operation(summary = "心跳接口")
+    public Res<Void> checkAuth() {
+        return Res.ok();
+    }
 }

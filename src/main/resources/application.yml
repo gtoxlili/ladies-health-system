@@ -41,6 +41,9 @@ spring:
         characterEncoding: utf-8
   jpa:
     open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
   mvc:
     throw-exception-if-no-handler-found: true
   web:
@@ -65,16 +68,16 @@ jwt:
   token-prefix: Bearer
   alg: HS256
   refresh-expire: 86400
+
 logging:
   level:
     org:
       hibernate:
         SQL: debug
-        type:
-          descriptor:
-            sql:
-              BasicBinder: trace
-              BasicExtractor: trace
+        orm:
+          jdbc:
+            bind: trace
+
     com:
       system:
         ladiesHealth:

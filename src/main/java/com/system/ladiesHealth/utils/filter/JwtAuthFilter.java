@@ -39,7 +39,8 @@ public class JwtAuthFilter extends BasicAuthenticationFilter {
             Authentication authentication = jwtUtil.parseAuthentication(token);
             // 将认证信息存入 Spring 安全上下文中
             SecurityContextHolder.getContext().setAuthentication(authentication);
-        } catch (IllegalArgumentException | ValidateException | JWTException | JSONException e) {
+        } catch (IllegalArgumentException | ValidateException | JWTException | JSONException |
+                 StringIndexOutOfBoundsException e) {
             request.setAttribute("exceptionMessage", new BadCredentialsException(e.getLocalizedMessage()));
             SecurityContextHolder.clearContext();
         } catch (AccountExpiredException e) {

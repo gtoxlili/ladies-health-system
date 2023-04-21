@@ -81,6 +81,21 @@ public class JwtUtil {
     }
 
     /**
+     * 提供 Expire 生成 token
+     */
+    public String generateToken(String sub, RoleEnum aud, Integer expiresAt) {
+        Date date = DateUtil.date();
+        return tokenPrefix + " " +
+                JWT.create()
+                        .setSubject(sub)
+                        .setAudience(aud.name())
+                        .setIssuedAt(date)
+                        .setExpiresAt(DateUtil.offsetSecond(date, expiresAt))
+                        .setSigner(signer)
+                        .sign();
+    }
+
+    /**
      * 验证token
      *
      * @param token token

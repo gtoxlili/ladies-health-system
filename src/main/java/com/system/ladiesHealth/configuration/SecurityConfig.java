@@ -5,6 +5,7 @@ import com.system.ladiesHealth.exception.AuthorizedFailSupport;
 import com.system.ladiesHealth.utils.JwtUtil;
 import com.system.ladiesHealth.utils.filter.CorsAuthFilter;
 import com.system.ladiesHealth.utils.filter.JwtAuthFilter;
+import com.system.ladiesHealth.utils.filter.LogAuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -48,6 +49,9 @@ public class SecurityConfig {
     @Value("${jwt.token-header}")
     private String tokenHeader;
 
+    @Autowired
+    private LogAuthFilter logAuthFilter;
+
     @Bean
     public WebSecurityCustomizer ignoringCustomizer() {
         return web -> web.ignoring()
@@ -86,8 +90,9 @@ public class SecurityConfig {
                 // 添加过滤器
                 .authenticationManager(authenticationManager)
                 .addFilterBefore(new JwtAuthFilter(authenticationManager, jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(logAuthFilter, JwtAuthFilter.class)
                 .addFilterBefore(CorsAuthFilter.create(frontDomain, tokenHeader)
-                        , JwtAuthFilter.class)
+                        , LogAuthFilter.class)
                 .build();
 
     }

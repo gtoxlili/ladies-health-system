@@ -30,6 +30,9 @@ public class CorsAuthFilter {
                 )
         );
 
+        // 允许的响应头
+        config.addExposedHeader("*");
+
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);

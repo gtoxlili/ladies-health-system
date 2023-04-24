@@ -1,5 +1,6 @@
 server:
   port: 16807
+  address: 127.0.0.1
 
 # 回滚时限
 rollback:
@@ -108,4 +109,4 @@ okhttp:
   write-timeout: 120
   proxy:
     host: 127.0.0.1
-    port: 7890
+    port: 16503

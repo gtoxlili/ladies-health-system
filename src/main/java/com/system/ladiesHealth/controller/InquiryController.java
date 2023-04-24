@@ -2,8 +2,10 @@ package com.system.ladiesHealth.controller;
 
 
 import com.system.ladiesHealth.domain.dto.InquiryDTO;
+import com.system.ladiesHealth.domain.vo.DiseaseVO;
 import com.system.ladiesHealth.domain.vo.InquiryRecordVO;
 import com.system.ladiesHealth.domain.vo.InquiryTopicsVO;
+import com.system.ladiesHealth.domain.vo.OperateVO;
 import com.system.ladiesHealth.domain.vo.base.Res;
 import com.system.ladiesHealth.service.InquiryService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -60,5 +62,21 @@ public class InquiryController {
     @GetMapping(value = "completions/{topicId}")
     public SseEmitter getCompletions(@PathVariable String topicId) {
         return inquiryService.getCompletions(topicId);
+    }
+
+    /*
+    根据 topicId 获取相关疾病项
+     */
+    @GetMapping(value = "diseases/{topicId}")
+    public Res<List<DiseaseVO>> getDiseases(@PathVariable String topicId) {
+        return inquiryService.getDiseases(topicId);
+    }
+
+    /*
+    根据 topicId 删除该问诊记录
+     */
+    @DeleteMapping(value = "topics/{topicId}")
+    public Res<OperateVO> deleteInquiryTopic(@PathVariable String topicId) {
+        return inquiryService.deleteInquiryTopic(topicId);
     }
 }

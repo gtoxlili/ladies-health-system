@@ -67,6 +67,7 @@ spring:
         enabled: true
       httpclient:
         enabled: false
+        disable-ssl-validation: false
 
 jwt:
   token-header: Authorization
@@ -103,7 +104,7 @@ async:
 
 
 okhttp:
-  read-timeout: 60
+  read-timeout: 240
   write-timeout: 120
   proxy:
     host: 127.0.0.1

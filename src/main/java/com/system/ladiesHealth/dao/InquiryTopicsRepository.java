@@ -9,6 +9,6 @@ import java.util.List;
 @Repository
 public interface InquiryTopicsRepository extends JpaRepository<InquiryTopicsPO, String> {
 
-    List<InquiryTopicsPO> findAllByCreateUserId(String createUserId);
+    List<InquiryTopicsPO> findAllByCreateUserIdAndDelTimeIsNull(String userId);
 
 }

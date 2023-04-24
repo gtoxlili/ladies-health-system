@@ -1,7 +1,9 @@
 package com.system.ladiesHealth.service;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ReUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.system.ladiesHealth.component.client.OpenAIClient;
 import com.system.ladiesHealth.dao.DiseaseRepository;
@@ -12,12 +14,11 @@ import com.system.ladiesHealth.domain.po.InquiryTopicsPO;
 import com.system.ladiesHealth.domain.pojo.openAI.CompletionsReq;
 import com.system.ladiesHealth.domain.pojo.openAI.CompletionsRes;
 import com.system.ladiesHealth.domain.pojo.openAI.EmbeddingsReq;
-import com.system.ladiesHealth.domain.vo.InquiryRecordVO;
-import com.system.ladiesHealth.domain.vo.InquiryTopicsVO;
-import com.system.ladiesHealth.domain.vo.SignReportVO;
+import com.system.ladiesHealth.domain.vo.*;
 import com.system.ladiesHealth.domain.vo.base.Res;
 import com.system.ladiesHealth.exception.BusinessException;
 import com.system.ladiesHealth.utils.Matrix;
+import com.system.ladiesHealth.utils.RollbackUtil;
 import com.system.ladiesHealth.utils.convert.InquiryConvert;
 import jakarta.annotation.Resource;
 import lombok.Data;
@@ -30,6 +31,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.BufferedReader;
@@ -69,25 +71,18 @@ public class InquiryService {
     @Value("${openai.api-key}")
     private String apiKey;
 
+    @Autowired
+    private RollbackUtil rollbackUtil;
+
     // 新增主题
     // 入参 首次问诊信息
     // 出参 主题id
     public Res<String> registerInquiry(String message, String createUserId) {
 
         SignReportVO signReportVO = personalService.getSignReport(createUserId).getData();
-        // 构建 message
-        String physicalCondition = "年龄：" + signReportVO.getAge() + "岁\n" +
-                "身高：" + signReportVO.getHeight() + "cm\n" +
-                "体重：" + signReportVO.getWeight() + "kg\n" +
-                "血压：" + signReportVO.getBloodPressure() + "mmHg\n" +
-                "心率：" + signReportVO.getHeartRate() + "次/分\n" +
-                "平均睡眠时长：" + String.format("%.2f", signReportVO.getAvgSleepTime()) + "小时\n" +
-                "平均运动时长：" + String.format("%.2f", signReportVO.getAvgExerciseTime()) + "小时\n" +
-                "平均每日饮水量：" + String.format("%.2f", signReportVO.getAvgDrinkWater()) + "\n" +
-                "平均每日饮水次数：" + String.format("%.2f", signReportVO.getAvgDrinkTimes()) + "次";
 
         InquiryTopicsPO inquiryTopicsPO = new InquiryTopicsPO();
-        inquiryTopicsPO.setPhysicalCondition(physicalCondition);
+        inquiryTopicsPO.setPhysicalCondition(signReportVO.generateReport());
         inquiryTopicsPO.setTitle(getTopicTitle(message));
 
         // 计算问题相似度
@@ -111,7 +106,7 @@ public class InquiryService {
         InquiryTopicsPO inquiryTopicsPO = inquiryTopicsRepository.findById(topicId).orElseThrow(() -> new BusinessException("问诊会话不存在"));
         List<InquiryRecordPO> records = inquiryTopicsPO.getRecords();
         if (records.get(records.size() - 1).getRole().equals("user")) {
-            throw new BusinessException("请等待 Bot 回复后再进一步提问");
+            records.get(records.size() - 1).setMessage(message);
         } else {
             records.add(new InquiryRecordPO("user", message));
         }
@@ -125,7 +120,7 @@ public class InquiryService {
     }
 
     public Res<List<InquiryTopicsVO>> getInquiryTopics(String userId) {
-        return Res.ok(inquiryTopicsRepository.findAllByCreateUserId(userId).stream().map(inquiryConvert::generateInquiryTopicsVOByInquiryTopicsPO).collect(Collectors.toList()));
+        return Res.ok(inquiryTopicsRepository.findAllByCreateUserIdAndDelTimeIsNull(userId).stream().map(inquiryConvert::generateInquiryTopicsVOByInquiryTopicsPO).collect(Collectors.toList()));
     }
 
     public SseEmitter getCompletions(String topicId) {
@@ -137,15 +132,59 @@ public class InquiryService {
 
         taskExecutor.execute(() -> {
             sseTask(topicId, emitter);
-            emitter.complete();
+            sseSendEnd(emitter);
         });
         return emitter;
+    }
+
+    public Res<List<DiseaseVO>> getDiseases(String topicId) {
+        InquiryTopicsPO inquiryTopicsPO = inquiryTopicsRepository.findById(topicId).orElseThrow(() -> new BusinessException("问诊会话不存在"));
+        List<DiseasePO> diseases = inquiryTopicsPO.getDiseases();
+        List<DiseaseVO> diseaseVOS = new ArrayList<>();
+        for (DiseasePO disease : diseases) {
+            DiseaseVO diseaseVO = new DiseaseVO();
+            StringBuilder sb = new StringBuilder();
+            for (String sub : disease.getContent().split(" ")) {
+                if (sub.startsWith("疾病名称：")) {
+                    diseaseVO.setName(sub.substring(5));
+                } else {
+                    sb.append(sub).append("\n");
+                }
+            }
+            diseaseVO.setDetail(sb.toString());
+            diseaseVOS.add(diseaseVO);
+        }
+        return Res.ok(diseaseVOS);
+    }
+
+    public Res<OperateVO> deleteInquiryTopic(@PathVariable String topicId) {
+        InquiryTopicsPO inquiryTopicsPO = inquiryTopicsRepository.findById(topicId).orElseThrow(() -> new BusinessException("问诊会话不存在"));
+        inquiryTopicsPO.setDelTime(DateUtil.date());
+        for (InquiryRecordPO record : inquiryTopicsPO.getRecords()) {
+            record.setDelTime(DateUtil.date());
+        }
+        inquiryTopicsRepository.save(inquiryTopicsPO);
+        return Res.ok(
+                rollbackUtil.builder("注销用户", () -> {
+                    inquiryTopicsPO.setDelTime(null);
+                    for (InquiryRecordPO record : inquiryTopicsPO.getRecords()) {
+                        record.setDelTime(null);
+                    }
+                    inquiryTopicsRepository.save(inquiryTopicsPO);
+                })
+        );
     }
 
 
     /*
     ------------------------------- 私有实现 -------------------------------
      */
+
+    @SneakyThrows
+    private void sseSendEnd(SseEmitter emitter) {
+        emitter.send(SseEmitter.event().name("end").data(""));
+        emitter.complete();
+    }
 
     @SneakyThrows
     private void sseTask(String topicId, SseEmitter emitter) {
@@ -155,15 +194,17 @@ public class InquiryService {
             emitter.send(SseEmitter.event().name("error").data("问诊会话不存在"));
             return;
         }
-        if (inquiryTopicsPO.getRecords().get(inquiryTopicsPO.getRecords().size() - 1).getRole().equals("bot")) {
+        if (inquiryTopicsPO.getRecords().get(inquiryTopicsPO.getRecords().size() - 1).getRole().equals("assistant")) {
             return;
         }
 
         List<CompletionsReq.Messages> prompt = new ArrayList<>();
-        prompt.add(new CompletionsReq.Messages("system", "你是一个专业的医师，我会给你提供一些病人的基本信息，以及一些可能与患者疾病相关的医学知识。请根据这些信息，给出一个合理的给出具体病情分析和建议。"));
+        prompt.add(new CompletionsReq.Messages("system", "你是一个专业的医师，我会给你提供一些病人的基本信息，以及一些可能与患者疾病相关的医学知识。请根据这些信息，给出一个合理的给出具体病情分析和建议。同时，请拒绝回答与医学无关的问题。"));
 
         StringBuilder sb = new StringBuilder();
-        sb.append("病人基本信息：\n\n").append(inquiryTopicsPO.getPhysicalCondition()).append("\n\n");
+        if (StrUtil.isNotBlank(inquiryTopicsPO.getPhysicalCondition())) {
+            sb.append("病人基本信息：\n\n").append(inquiryTopicsPO.getPhysicalCondition()).append("\n\n");
+        }
         sb.append("可能相关的医学知识: \n\n");
         for (DiseasePO diseasePO : inquiryTopicsPO.getDiseases()) {
             for (String sub : diseasePO.getContent().split(" ")) {
@@ -219,7 +260,7 @@ public class InquiryService {
         }
 
         // 保存问诊记录
-        inquiryTopicsPO.getRecords().add(new InquiryRecordPO("bot", target.toString()));
+        inquiryTopicsPO.getRecords().add(new InquiryRecordPO("assistant", target.toString()));
         inquiryTopicsRepository.save(inquiryTopicsPO);
     }
 
@@ -232,7 +273,7 @@ public class InquiryService {
 
     // 归纳问题主题
     private String getTopicTitle(String message) {
-        String prompt = String.format("现有问诊会话问题：%s\n\n请帮我对此总结此次会话的主题，要求尽量简短，并且无其余语句以及标点符号直接输出主题名称即可.", message);
+        String prompt = String.format("现有问诊会话问题：%s\n\n请帮我对此总结此次会话的主题，要求尽量简短，并且无其余语句以及标点符号直接输出主题名称即可。", message);
         String result = openAIClient.completion(new CompletionsReq(prompt)).getChoices()[0].getMessage().getContent();
         return ReUtil.replaceAll(result, "[\\pP\\p{Punct}]", "");
     }

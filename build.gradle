@@ -53,6 +53,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-cache'
 
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.0.2'
+    implementation 'io.github.openfeign:feign-okhttp:12.3'
 }
 
 tasks.named('test') {

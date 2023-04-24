@@ -37,9 +37,8 @@ public interface OpenAIClient {
      */
 
     @PostMapping(
-            value = "/completions",
+            value = "/chat/completions",
             consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.TEXT_EVENT_STREAM_VALUE,
             headers = "Authorization=Bearer ${openai.api-key}"
     )
     CompletionsRes completion(@RequestBody CompletionsReq body);

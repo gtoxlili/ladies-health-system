@@ -57,7 +57,8 @@ public class SecurityConfig {
         return web -> web.ignoring()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                 .requestMatchers(HttpMethod.POST, "/auth/login/**")
-                .requestMatchers(HttpMethod.GET, "/rollback/**");
+                .requestMatchers(HttpMethod.GET, "/rollback/**")
+                .requestMatchers(HttpMethod.GET, "/inquiry/completions/**");
     }
 
     /**

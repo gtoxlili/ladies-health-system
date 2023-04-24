@@ -33,26 +33,40 @@ public class CompletionsRes {
 
     private String id;
     private String object;
-    private Integer created;
+    private int created;
     private String model;
-    private Choice[] choices;
     private Usage usage;
-
-    @Data
-    @AllArgsConstructor
-    public static class Choice {
-        private String text;
-        private Integer index;
-        private Object logprobs;
-        private String finish_reason;
-    }
+    private Choices[] choices;
 
     @Data
     @AllArgsConstructor
     public static class Usage {
-        private Integer prompt_tokens;
-        private Integer completion_tokens;
-        private Integer total_tokens;
+        private int prompt_tokens;
+        private int completion_tokens;
+        private int total_tokens;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class Choices {
+        private Message message;
+        private String finish_reason;
+        private int index;
+        private Delta delta;
+
+        @Data
+        @AllArgsConstructor
+        public static class Delta {
+            private String content;
+        }
+
+
+        @Data
+        @AllArgsConstructor
+        public static class Message {
+            private String role;
+            private String content;
+        }
     }
 
 }

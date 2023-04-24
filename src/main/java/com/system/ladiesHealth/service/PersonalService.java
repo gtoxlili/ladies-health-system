@@ -114,8 +114,8 @@ public class PersonalService {
 
 
     public Res<List<DrinkRecordVO>> getDrinkRecord(Date startTime, Date endTime, String createUserId) {
-        List<DrinkRecordPO> sleepRecordPOs = drinkRecordRepository.findAllByCreateUserIdAndCreateDateBetween(createUserId, startTime, DateUtil.endOfDay(endTime));
-        List<DrinkRecordVO> result = sleepRecordPOs.stream().
+        List<DrinkRecordPO> drinkRecordPOs = drinkRecordRepository.findAllByCreateUserIdAndCreateDateBetween(createUserId, startTime, DateUtil.endOfDay(endTime));
+        List<DrinkRecordVO> result = drinkRecordPOs.stream().
                 sorted(
                         (o1, o2) -> DateUtil.compare(o1.getCreateDate(), o2.getCreateDate())
                 ).map(
@@ -311,5 +311,35 @@ public class PersonalService {
                 menstruationReactionMap.entrySet().stream().map(entry -> Pair.of(entry.getKey(), entry.getValue())).collect(Collectors.toList())
         );
         return Res.ok(result);
+    }
+
+    // 获取各项体征报表
+    public Res<SignReportVO> getSignReport(String createUserId) {
+        // 基础信息
+        BasicSignVO basicSignVO = getBasicSign(createUserId).getData();
+
+        // 半年
+        Date endTime = DateUtil.endOfDay(DateUtil.date());
+        Date startTime = DateUtil.offsetDay(DateUtil.date(), -180);
+
+        // 睡眠信息
+        List<SleepRecordPO> sleepRecordPOs = sleepRecordRepository.findAllByCreateUserIdAndCreateDateBetween(createUserId, startTime, endTime);
+        // 保留两位小数
+        Double avgSleepTime = sleepRecordPOs.stream().mapToDouble(SleepRecordPO::getSleepDuration).average().orElse(0);
+
+        // 运动信息
+        List<ExerciseRecordPO> exerciseRecordPOs = exerciseRecordRepository.findAllByCreateUserIdAndCreateDateBetween(createUserId, startTime, endTime);
+        Double avgExerciseTime = exerciseRecordPOs.stream().
+                collect(Collectors.groupingBy(
+                        (entry) -> DateUtil.format(entry.getCreateDate(), "yyyy-MM-dd")
+                        , Collectors.summingDouble(ExerciseRecordPO::getExerciseDuration))).
+                values().stream().mapToDouble(Double::doubleValue).average().orElse(0);
+
+        // 饮水信息
+        List<DrinkRecordPO> drinkRecordPOs = drinkRecordRepository.findAllByCreateUserIdAndCreateDateBetween(createUserId, startTime, endTime);
+        Double avgDrinkWater = drinkRecordPOs.stream().mapToDouble(DrinkRecordPO::getDrinkVolume).average().orElse(0);
+        Double averageDrinkTimes = drinkRecordPOs.stream().mapToDouble(DrinkRecordPO::getDrinkTimes).average().orElse(0);
+
+        return Res.ok(personalConvert.generateSignReportVO(basicSignVO, avgSleepTime, avgExerciseTime, avgDrinkWater, averageDrinkTimes));
     }
 }

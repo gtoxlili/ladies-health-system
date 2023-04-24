@@ -43,6 +43,7 @@ spring:
     open-in-view: false
     properties:
       hibernate:
+        enable_lazy_load_no_trans: true
         format_sql: true
   mvc:
     throw-exception-if-no-handler-found: true
@@ -62,6 +63,10 @@ spring:
         config:
           default:
             loggerLevel: basic
+      okhttp:
+        enabled: true
+      httpclient:
+        enabled: false
 
 jwt:
   token-header: Authorization
@@ -96,3 +101,10 @@ async:
     rejection-policy: java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy
 
 
+
+okhttp:
+  read-timeout: 60
+  write-timeout: 120
+  proxy:
+    host: 127.0.0.1
+    port: 7890

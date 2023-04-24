@@ -3,11 +3,9 @@ package com.system.ladiesHealth.configuration;
 
 import com.system.ladiesHealth.exception.AuthorizedFailSupport;
 import com.system.ladiesHealth.utils.JwtUtil;
-import com.system.ladiesHealth.utils.filter.CorsAuthFilter;
 import com.system.ladiesHealth.utils.filter.JwtAuthFilter;
 import com.system.ladiesHealth.utils.filter.LogAuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -42,12 +40,6 @@ public class SecurityConfig {
     @Autowired
     private AuthorizedFailSupport authorizedFailSupport;
 
-
-    @Value("${front.domain}")
-    private String frontDomain;
-
-    @Value("${jwt.token-header}")
-    private String tokenHeader;
 
     @Autowired
     private LogAuthFilter logAuthFilter;
@@ -92,8 +84,6 @@ public class SecurityConfig {
                 .authenticationManager(authenticationManager)
                 .addFilterBefore(new JwtAuthFilter(authenticationManager, jwtUtil), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(logAuthFilter, JwtAuthFilter.class)
-                .addFilterBefore(CorsAuthFilter.create(frontDomain, tokenHeader)
-                        , LogAuthFilter.class)
                 .build();
 
     }

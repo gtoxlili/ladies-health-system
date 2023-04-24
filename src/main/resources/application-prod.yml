@@ -1,5 +1,5 @@
 front:
-  domain: https://*.gtio.work:[*]
+  domain: https://ladie.gtio.work
 
 spring:
   datasource:

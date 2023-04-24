@@ -149,7 +149,7 @@ public class InquiryService {
             sseTask(topicId, emitter);
             sseSendEnd(emitter);
         });
-        // X-Accel-Buffering
+
         return emitter;
     }
 

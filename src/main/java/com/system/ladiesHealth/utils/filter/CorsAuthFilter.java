@@ -30,6 +30,9 @@ public class CorsAuthFilter {
                 )
         );
 
+        // max-age
+        config.setMaxAge(300L);
+
         // 允许的响应头
         config.addExposedHeader("*");
 

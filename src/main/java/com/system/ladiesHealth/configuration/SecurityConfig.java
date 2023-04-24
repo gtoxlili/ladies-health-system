@@ -3,9 +3,11 @@ package com.system.ladiesHealth.configuration;
 
 import com.system.ladiesHealth.exception.AuthorizedFailSupport;
 import com.system.ladiesHealth.utils.JwtUtil;
+import com.system.ladiesHealth.utils.filter.CorsAuthFilter;
 import com.system.ladiesHealth.utils.filter.JwtAuthFilter;
 import com.system.ladiesHealth.utils.filter.LogAuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -41,16 +43,19 @@ public class SecurityConfig {
     private AuthorizedFailSupport authorizedFailSupport;
 
 
+    @Value("${front.domain}")
+    private String frontDomain;
+
+    @Value("${jwt.token-header}")
+    private String tokenHeader;
+
     @Autowired
     private LogAuthFilter logAuthFilter;
 
     @Bean
     public WebSecurityCustomizer ignoringCustomizer() {
         return web -> web.ignoring()
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
-                .requestMatchers(HttpMethod.POST, "/auth/login/**")
-                .requestMatchers(HttpMethod.GET, "/rollback/**")
-                .requestMatchers(HttpMethod.GET, "/inquiry/completions/**");
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html");
     }
 
     /**
@@ -69,6 +74,9 @@ public class SecurityConfig {
                 // 指定哪些请求无需认证, 但走过滤器
                 .authorizeHttpRequests()
                 .requestMatchers(HttpMethod.POST, "/auth/register/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/auth/login/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/rollback/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/inquiry/completions/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 // 不创建会话
@@ -84,6 +92,8 @@ public class SecurityConfig {
                 .authenticationManager(authenticationManager)
                 .addFilterBefore(new JwtAuthFilter(authenticationManager, jwtUtil), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(logAuthFilter, JwtAuthFilter.class)
+                .addFilterBefore(CorsAuthFilter.create(frontDomain, tokenHeader)
+                        , LogAuthFilter.class)
                 .build();
 
     }

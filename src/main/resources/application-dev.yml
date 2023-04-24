@@ -1,5 +1,5 @@
 front:
-  domain: '*'
+  domain: "*"
 
 spring:
   datasource:

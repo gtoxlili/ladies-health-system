@@ -26,9 +26,12 @@ import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -124,7 +127,19 @@ public class InquiryService {
     }
 
     public SseEmitter getCompletions(String topicId) {
-        SseEmitter emitter = new SseEmitter();
+        SseEmitter emitter = new SseEmitter() {
+            @Override
+            protected void extendResponse(@NotNull ServerHttpResponse outputMessage) {
+                super.extendResponse(outputMessage);
+
+                HttpHeaders headers = outputMessage.getHeaders();
+                if (headers.getContentType() == null) {
+                    headers.setContentType(org.springframework.http.MediaType.TEXT_EVENT_STREAM);
+                }
+                // Nginx SSE
+                headers.set("X-Accel-Buffering", "no");
+            }
+        };
 
         // 日志记录
         emitter.onCompletion(() -> log.info("TopicId: {} SSE Completion", topicId));
@@ -134,6 +149,7 @@ public class InquiryService {
             sseTask(topicId, emitter);
             sseSendEnd(emitter);
         });
+        // X-Accel-Buffering
         return emitter;
     }
 

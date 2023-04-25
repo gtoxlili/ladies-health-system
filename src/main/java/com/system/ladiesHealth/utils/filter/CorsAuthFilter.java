@@ -20,6 +20,10 @@ public class CorsAuthFilter {
 
         // 允许的域
         config.addAllowedOriginPattern(frontDomain);
+        // 允许 localhost 、127.0.0.1
+        config.addAllowedOriginPattern("http://localhost:[*]");
+        config.addAllowedOriginPattern("http://127.0.0.1:[*]");
+
         // 允许的请求头
         config.setAllowedHeaders(
                 Arrays.asList(

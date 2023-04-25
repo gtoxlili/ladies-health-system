@@ -41,8 +41,6 @@ public class OkHttpConfig {
                         new InetSocketAddress(proxyHost, proxyPort)))
                 .readTimeout(readTimeout, TimeUnit.SECONDS)
                 .writeTimeout(writeTimeout, TimeUnit.SECONDS)
-                // ignoreSslCertificate
-
                 .build();
     }
 

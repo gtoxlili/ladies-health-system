@@ -1,6 +1,7 @@
 server:
   port: 16807
   address: 127.0.0.1
+  forward-headers-strategy: framework
 
 # 回滚时限
 rollback:

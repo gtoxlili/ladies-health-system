@@ -7,7 +7,7 @@ spring:
       catalog: ladies_health
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
 
 springdoc:
   api-docs:

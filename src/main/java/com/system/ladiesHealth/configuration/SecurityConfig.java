@@ -1,6 +1,7 @@
 package com.system.ladiesHealth.configuration;
 
 
+import cn.hutool.core.collection.ListUtil;
 import com.system.ladiesHealth.exception.AuthorizedFailSupport;
 import com.system.ladiesHealth.utils.JwtUtil;
 import com.system.ladiesHealth.utils.filter.CorsAuthFilter;
@@ -44,7 +45,7 @@ public class SecurityConfig {
 
 
     @Value("${front.domain}")
-    private String frontDomain;
+    private String[] frontDomain;
 
     @Value("${jwt.token-header}")
     private String tokenHeader;
@@ -92,7 +93,7 @@ public class SecurityConfig {
                 .authenticationManager(authenticationManager)
                 .addFilterBefore(new JwtAuthFilter(authenticationManager, jwtUtil), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(logAuthFilter, JwtAuthFilter.class)
-                .addFilterBefore(CorsAuthFilter.create(frontDomain, tokenHeader)
+                .addFilterBefore(CorsAuthFilter.create(ListUtil.toList(frontDomain), tokenHeader)
                         , LogAuthFilter.class)
                 .build();
 

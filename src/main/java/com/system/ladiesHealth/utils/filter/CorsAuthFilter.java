@@ -6,12 +6,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
+import java.util.List;
 
 
 public class CorsAuthFilter {
 
     static public CorsFilter create(
-            String frontDomain,
+            List<String> frontDomain,
             String tokenHeader
     ) {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -19,10 +20,7 @@ public class CorsAuthFilter {
         config.setAllowCredentials(true);
 
         // 允许的域
-        config.addAllowedOriginPattern(frontDomain);
-        // 允许 localhost 、127.0.0.1
-        config.addAllowedOriginPattern("http://localhost:[*]");
-        config.addAllowedOriginPattern("http://127.0.0.1:[*]");
+        config.setAllowedOriginPatterns(frontDomain);
 
         // 允许的请求头
         config.setAllowedHeaders(

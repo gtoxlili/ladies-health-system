@@ -7,6 +7,7 @@ import com.system.ladiesHealth.dao.DiseaseRepository;
 import com.system.ladiesHealth.domain.po.DiseasePO;
 import com.system.ladiesHealth.domain.pojo.openAI.EmbeddingsReq;
 import com.system.ladiesHealth.domain.pojo.openAI.EmbeddingsRes;
+import com.system.ladiesHealth.utils.Matrix;
 import com.system.ladiesHealth.utils.XXHash;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -36,13 +37,13 @@ public class Initialization {
 
     private static final long xxHashSeed = 0x000000009E3779B1L;
 
-//    @Autowired
+    //    @Autowired
 //    private InquiryService inquiryService;
 //
-//    @Bean
-//    public void testEmbedding() {
-//
-//    }
+    @Bean
+    public void testEmbedding() {
+        log.info("验证 jdk.incubator.vector 可用性 {}", Matrix.cosineSimilarity(new double[]{1, 2, 3, 4, 5, 6, 7, 8}, new double[]{1, 2, 3, 4, 5, 6, 7, 8}));
+    }
 
 
     // 初始化疾病向量库

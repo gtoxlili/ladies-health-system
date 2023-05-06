@@ -95,7 +95,7 @@ public class InquiryService {
         // 计算问题相似度
         List<Double> vector = getVector(message);
         // 归纳问题主题
-        inquiryTopicsPO.setDiseases(topKSimilarDisease(vector, 4));
+        inquiryTopicsPO.setDiseases(topKSimilarDisease(vector, 3));
 
         // 首次会话记录
         InquiryRecordPO inquiryRecordPO = new InquiryRecordPO();
@@ -219,13 +219,13 @@ public class InquiryService {
         }
 
         List<CompletionsReq.Messages> prompt = new ArrayList<>();
-        prompt.add(new CompletionsReq.Messages("system", "你是一个专业的医师，我会给你提供一些病人的基本信息，以及一些可能与患者疾病相关的医学知识。请根据这些信息，给出一个合理的给出具体病情分析和建议。同时，请拒绝回答与医学无关的问题。"));
+        prompt.add(new CompletionsReq.Messages("system", "你是一位专业的医师，我会给你提供一些病人的基本信息，以及一些可能与患者疾病相关的医学知识。请根据这些信息，给出一个合理的给出具体病情分析和建议。同时，请拒绝回答与医学无关的问题。"));
 
         StringBuilder sb = new StringBuilder();
         if (StrUtil.isNotBlank(inquiryTopicsPO.getPhysicalCondition())) {
-            sb.append("病人基本信息：\n\n").append(inquiryTopicsPO.getPhysicalCondition()).append("\n\n");
+            sb.append("病人基本信息：\n").append(inquiryTopicsPO.getPhysicalCondition()).append("\n\n");
         }
-        sb.append("可能相关的医学知识: \n\n");
+        sb.append("可能相关的医学知识: \n");
         for (DiseasePO diseasePO : inquiryTopicsPO.getDiseases()) {
             for (String sub : diseasePO.getContent().split(" ")) {
                 if (sub.startsWith("疾病名称") || sub.startsWith("药物治疗") || sub.startsWith("多发群体")
@@ -242,7 +242,7 @@ public class InquiryService {
             prompt.add(new CompletionsReq.Messages(record.getRole(), record.getMessage()));
         }
 
-        CompletionsReq completionsReq = new CompletionsReq("gpt-3.5-turbo", prompt, 0.4, true);
+        CompletionsReq completionsReq = new CompletionsReq("gpt-3.5-turbo", prompt, 0.8, true);
         // 构建 okhttp 请求
         RequestBody requestBody = RequestBody.create(JSONUtil.toJsonStr(completionsReq), MediaType.parse("application/json; charset=utf-8"));
         Request request = new Request.Builder()

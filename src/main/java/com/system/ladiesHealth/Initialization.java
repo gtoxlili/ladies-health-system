@@ -39,12 +39,15 @@ public class Initialization {
 
 //    @Autowired
 //    private InquiryService inquiryService;
-
+//
 //    @Bean
 //    public void testEmbedding() {
-//        List<Double> v1 = inquiryService.getVector("怀孕后肚子很痛怎么办");
-//        List<Double> v2 = inquiryService.getVector("最近肚子很痛是不是因为怀孕了");
+//        List<Double> v1 = inquiryService.getVector("产检需要做糖耐量试验吗？");
+//        List<Double> v2 = inquiryService.getVector("妊娠期糖尿病筛查有必要做吗");
 //        log.info("对比结果：{}", Matrix.cosineSimilarity(v1, v2));
+//        List<Double> v3 = inquiryService.getVector("乳交会传染艾滋病吗");
+//        List<Double> v4 = inquiryService.getVector("艾滋病会传染吗");
+//        log.info("对比结果：{}", Matrix.cosineSimilarity(v3, v4));
 //    }
 
 

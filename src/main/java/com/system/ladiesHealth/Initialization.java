@@ -2,7 +2,7 @@ package com.system.ladiesHealth;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
-import com.system.ladiesHealth.component.client.OpenAIClient;
+import com.system.ladiesHealth.component.client.MicroservicesClient;
 import com.system.ladiesHealth.dao.DiseaseRepository;
 import com.system.ladiesHealth.domain.po.DiseasePO;
 import com.system.ladiesHealth.domain.pojo.openAI.EmbeddingsReq;
@@ -31,7 +31,7 @@ public class Initialization {
     private DiseaseRepository diseaseRepository;
 
     @Autowired
-    private OpenAIClient openAIClient;
+    private MicroservicesClient microservicesClient;
 
     @Resource(name = "taskExecutor")
     private ThreadPoolTaskExecutor taskExecutor;
@@ -42,11 +42,9 @@ public class Initialization {
     private InquiryService inquiryService;
 
 //    @Bean
-//    @Order
 //    public void testDisease() {
-//        List<Double> c = consultationService.getVector("怀孕后肚子巨痛怎么办");
-//        System.out.println(c);
-////        consultationService.topKSimilarDisease(c, 10);
+//        List<Double> c = inquiryService.getVector("怀孕后肚子巨痛怎么办");
+//        inquiryService.topKSimilarDisease(c, 5);
 //    }
 
 
@@ -89,8 +87,8 @@ public class Initialization {
         if (diseaseRepository.existsById(id)) {
             return;
         }
-        EmbeddingsRes embeddingsRes = openAIClient.embedding(new EmbeddingsReq(sb.toString(), "text-embedding-ada-002"));
-        List<Double> dataBean = embeddingsRes.getData().get(0).getEmbedding();
+        EmbeddingsRes<Double> embeddingsRes = microservicesClient.embedding(new EmbeddingsReq<>(sb.toString()));
+        List<Double> dataBean = embeddingsRes.getData();
         DiseasePO diseasePO = new DiseasePO();
         diseasePO.setId(id);
         diseasePO.setContent(line);

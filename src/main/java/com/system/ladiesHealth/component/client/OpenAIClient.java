@@ -1,6 +1,9 @@
 package com.system.ladiesHealth.component.client;
 
-import com.system.ladiesHealth.domain.pojo.openAI.*;
+import com.system.ladiesHealth.domain.pojo.openAI.CompletionsReq;
+import com.system.ladiesHealth.domain.pojo.openAI.CompletionsRes;
+import com.system.ladiesHealth.domain.pojo.openAI.ModerationsReq;
+import com.system.ladiesHealth.domain.pojo.openAI.ModerationsRes;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,22 +45,6 @@ public interface OpenAIClient {
             headers = "Authorization=Bearer ${openai.api-key}"
     )
     CompletionsRes completion(@RequestBody CompletionsReq body);
-
-    /*
-    curl https://api.openai.com/v1/embeddings \
-      -H "Authorization: Bearer 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" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "input": "The food was delicious and the waiter...",
-        "model": "text-embedding-ada-002"
-     }'
-     */
-    @PostMapping(
-            value = "/embeddings",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            headers = "Authorization=Bearer ${openai.api-key}"
-    )
-    EmbeddingsRes embedding(@RequestBody EmbeddingsReq body);
 
 
 }

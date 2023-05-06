@@ -5,22 +5,14 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class EmbeddingsRes {
-    @Data
-    public static class DataBean {
-        private List<Double> embedding;
-        private Integer index;
-        private String object;
-    }
+public class EmbeddingsRes<T> {
 
-    @Data
-    public static class UsageBean {
-        private Integer prompt_tokens;
-        private Integer total_tokens;
-    }
+    private Integer code;
 
-    private List<DataBean> data;
-    private String model;
-    private String object;
-    private UsageBean usage;
+    private String msg;
+
+    private String response_time;
+
+    private List<T> data;
+
 }

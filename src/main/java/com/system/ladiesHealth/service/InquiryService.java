@@ -5,6 +5,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.system.ladiesHealth.component.client.MicroservicesClient;
 import com.system.ladiesHealth.component.client.OpenAIClient;
 import com.system.ladiesHealth.dao.DiseaseRepository;
 import com.system.ladiesHealth.dao.InquiryTopicsRepository;
@@ -55,6 +56,9 @@ public class InquiryService {
 
     @Autowired
     private OpenAIClient openAIClient;
+
+    @Autowired
+    private MicroservicesClient microservicesClient;
 
     @Autowired
     private PersonalService personalService;
@@ -282,9 +286,9 @@ public class InquiryService {
 
 
     // 计算问题相似度
-    private List<Double> getVector(String message) {
-        EmbeddingsReq embeddingsReq = new EmbeddingsReq(message, "text-embedding-ada-002");
-        return openAIClient.embedding(embeddingsReq).getData().get(0).getEmbedding();
+    public List<Double> getVector(String message) {
+        EmbeddingsReq<String> embeddingsReq = new EmbeddingsReq<>(message);
+        return microservicesClient.embedding(embeddingsReq).getData();
     }
 
     // 归纳问题主题
@@ -298,7 +302,7 @@ public class InquiryService {
     根据用户输入的 p，计算问题的相似度，返回相似度最高的前K个 Disease
      */
     @SneakyThrows
-    private List<DiseasePO> topKSimilarDisease(List<Double> vector, int k) {
+    public List<DiseasePO> topKSimilarDisease(List<Double> vector, int k) {
         @Data
         @EqualsAndHashCode(callSuper = true)
         class PriorityPojo extends DiseasePO {

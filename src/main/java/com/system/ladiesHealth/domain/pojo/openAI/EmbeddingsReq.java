@@ -12,9 +12,8 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
-public class EmbeddingsReq {
+public class EmbeddingsReq<T> {
 
-    private String input;
-    private String model;
+    private T text;
 
 }

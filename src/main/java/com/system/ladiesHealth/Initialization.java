@@ -7,7 +7,6 @@ import com.system.ladiesHealth.dao.DiseaseRepository;
 import com.system.ladiesHealth.domain.po.DiseasePO;
 import com.system.ladiesHealth.domain.pojo.openAI.EmbeddingsReq;
 import com.system.ladiesHealth.domain.pojo.openAI.EmbeddingsRes;
-import com.system.ladiesHealth.service.InquiryService;
 import com.system.ladiesHealth.utils.XXHash;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -38,13 +37,14 @@ public class Initialization {
 
     private static final long xxHashSeed = 0x000000009E3779B1L;
 
-    @Autowired
-    private InquiryService inquiryService;
+//    @Autowired
+//    private InquiryService inquiryService;
 
 //    @Bean
-//    public void testDisease() {
-//        List<Double> c = inquiryService.getVector("怀孕后肚子巨痛怎么办");
-//        inquiryService.topKSimilarDisease(c, 5);
+//    public void testEmbedding() {
+//        List<Double> v1 = inquiryService.getVector("怀孕后肚子很痛怎么办");
+//        List<Double> v2 = inquiryService.getVector("最近肚子很痛是不是因为怀孕了");
+//        log.info("对比结果：{}", Matrix.cosineSimilarity(v1, v2));
 //    }
 
 

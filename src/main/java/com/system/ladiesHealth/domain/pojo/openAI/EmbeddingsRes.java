@@ -2,8 +2,6 @@ package com.system.ladiesHealth.domain.pojo.openAI;
 
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 public class EmbeddingsRes<T> {
 
@@ -13,6 +11,6 @@ public class EmbeddingsRes<T> {
 
     private String response_time;
 
-    private List<T> data;
+    private T[] data;
 
 }

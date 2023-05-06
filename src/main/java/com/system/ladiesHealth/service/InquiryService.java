@@ -2,6 +2,7 @@ package com.system.ladiesHealth.service;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
@@ -39,10 +40,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.BufferedReader;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.stream.Collectors;
@@ -93,7 +91,7 @@ public class InquiryService {
         inquiryTopicsPO.setTitle(getTopicTitle(message));
 
         // 计算问题相似度
-        List<Double> vector = getVector(message);
+        double[] vector = getVector(message);
         // 归纳问题主题
         inquiryTopicsPO.setDiseases(topKSimilarDisease(vector, 3));
 
@@ -286,9 +284,10 @@ public class InquiryService {
 
 
     // 计算问题相似度
-    public List<Double> getVector(String message) {
+    public double[] getVector(String message) {
         EmbeddingsReq<String> embeddingsReq = new EmbeddingsReq<>(message);
-        return microservicesClient.embedding(embeddingsReq).getData();
+        // Double[] 转 double[]
+        return ArrayUtil.unWrap(microservicesClient.embedding(embeddingsReq).getData());
     }
 
     // 归纳问题主题
@@ -302,7 +301,7 @@ public class InquiryService {
     根据用户输入的 p，计算问题的相似度，返回相似度最高的前K个 Disease
      */
     @SneakyThrows
-    public List<DiseasePO> topKSimilarDisease(List<Double> vector, int k) {
+    public List<DiseasePO> topKSimilarDisease(double[] vector, int k) {
         @Data
         @EqualsAndHashCode(callSuper = true)
         class PriorityPojo extends DiseasePO {
@@ -321,7 +320,8 @@ public class InquiryService {
                 List<DiseasePO> diseasePOs = diseaseRepository.findAll(pageable).getContent();
                 for (DiseasePO diseasePO : diseasePOs) {
                     // 计算相似度
-                    List<Double> diseaseVector = JSONUtil.toList(diseasePO.getVector(), Double.class);
+                    // 去头去尾然后转换为数组
+                    double[] diseaseVector = Arrays.stream(diseasePO.getVector().split(",")).mapToDouble(Double::parseDouble).toArray();
                     double similarity = Matrix.cosineSimilarity(vector, diseaseVector);
                     // obj clone
                     PriorityPojo pj = BeanUtil.copyProperties(diseasePO, PriorityPojo.class);

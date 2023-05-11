@@ -17,7 +17,7 @@ public interface HealthyReposity extends JpaRepository<HealthyPo, String> {
 
 
     Page<HealthyPo> findAllByFuserIdAndStatucOrderByCreateTimeDesc(Pageable pageable,
-                                                          String fUerId, int statuc);
+                                                                   String fUerId, int statuc);
     // 0 待启动, 1 已经提醒，处于待办中。 2: 处于已办中
 
     @Modifying
@@ -28,6 +28,6 @@ public interface HealthyReposity extends JpaRepository<HealthyPo, String> {
     int deleteByFidAndAndFuserId(String fid, String fUserId);
 
     @Modifying
-    @Query(value = "update t_healthy set statuc =2 where statuc =1 and fid=:fid and fuser_id=:name " ,nativeQuery = true)
+    @Query(value = "update t_healthy set statuc =2 where statuc =1 and fid=:fid and fuser_id=:name ", nativeQuery = true)
     void finishHealthy(String fid, String name);
 }

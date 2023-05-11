@@ -38,7 +38,7 @@ public class HealthyService {
      */
     @Transactional
     public int deleteHealthy(String id, String fUserId) {
-       return reposity.deleteByFidAndAndFuserId(id, fUserId);
+        return reposity.deleteByFidAndAndFuserId(id, fUserId);
     }
 
     /**
@@ -48,12 +48,12 @@ public class HealthyService {
      * @return
      */
     public HealthyPo upadteHealthy(HealthyPo healthyPo) {
-         HealthyPo result = reposity.findById(healthyPo.getFid()).orElse(null);
+        HealthyPo result = reposity.findById(healthyPo.getFid()).orElse(null);
         if (null == result) {
             return null;
         }
-        if(result.getStatuc() != 0){
-            return  null ;
+        if (result.getStatuc() != 0) {
+            return null;
         }
         //原则上不允许修改 标题主题
         result.setHdesc(healthyPo.getHdesc());
@@ -76,11 +76,11 @@ public class HealthyService {
     public Page<HealthyPo> getHealthyList(Pageable pageable,
                                           int statuc, String userId) {
 
-         if(statuc == 0){
-             return  reposity.findAllByFuserIdOrderByCreateTimeDesc(pageable, userId);
-         }
+        if (statuc == 0) {
+            return reposity.findAllByFuserIdOrderByCreateTimeDesc(pageable, userId);
+        }
 
-        return reposity.findAllByFuserIdAndStatucOrderByCreateTimeDesc(pageable,userId, statuc);
+        return reposity.findAllByFuserIdAndStatucOrderByCreateTimeDesc(pageable, userId, statuc);
     }
 
     /**
@@ -94,17 +94,17 @@ public class HealthyService {
 
     /**
      * 完成健康提醒
+     *
      * @param fid
      * @param name
      */
     @Transactional
     public void finishHealthy(String fid, String name) {
 
-        reposity.finishHealthy(fid,name ) ;
+        reposity.finishHealthy(fid, name);
     }
 
     public HealthyPo getDetail(String fid) {
-        HealthyPo healthyPo = reposity.findById(fid).orElse(null);
-        return  healthyPo;
+        return reposity.findById(fid).orElse(null);
     }
 }
